@@ -1,8 +1,18 @@
-const { query } = require('express');
+// const { query } = require('express');
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const { send } = require('process');
+const { animals } = require('./data/animals');
+
 const app = express();
 
-const { animals } = require('./data/animals');
+// parse incoming string or array data
+app.use(express.urlencoded({ extended: true }));
+// parse incoming JSON data
+app.use(express.json());
+// middleware path for local files
+app.use(express.static('public'));
 
 function filterByQuery(query, animalsArray) {
   let personalityTraitsArray = [];
@@ -48,6 +58,38 @@ function findById(id, animalsArray) {
   return result;
 }
 
+function createNewAnimal(body, animalsArray) {
+  const animal = body;
+  animalsArray.push(animal);
+  fs.writeFileSync(
+    path.join(__dirname, './data/animals.json'),
+
+// save the JavaScript array data as JSON, so we use JSON.stringify() to convert it. 
+//  The null argument means we don't want to edit any of our existing data; if we did, we could pass something in there. 
+// The 2 indicates we want to create white space between our values to make it more readable. If we were to leave those two arguments out, the entire animals.json file would work, but it would be really hard to read.
+
+    JSON.stringify({ animals: animalsArray }, null, 2)
+  );
+  console.log(animalsArray);
+  return animal;
+}
+
+function validateAnimal(animal) {
+  if (!animal.name || typeof animal.name !== 'string') {
+    return false;
+  }
+  if (!animal.species || typeof animal.species !== 'string') {
+    return false;
+  }
+  if (!animal.diet || typeof animal.diet !== 'string') {
+    return false;
+  }
+  if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
+    return false;
+  }
+  return true;
+}
+
 app.get('/api/animals', (req, res) => {
   let results = animals;
   if (req.query) {
@@ -63,6 +105,45 @@ app.get('/api/animals/:id', (req, res) => {
   } else {
     res.send(404);
   }
+});
+
+
+
+// 11.2.3 First, notice that this is just another method of the app object that allows us to create routes, much like app.get(). This method doesn't say get though—it says post, which means that we defined a route that listens for POST requests, not GET requests. POST requests differ from GET requests in that they represent the action of a client requesting the server to accept data rather than vice versa.//
+
+app.post('/api/animals', (req, res) => {
+  // set id based on what the next index of the array will be
+  req.body.id = animals.length.toString();
+
+  // if any data in req.body is incorrect, send 400 error back
+  if (!validateAnimal(req.body)) {
+    // res.status().send(); is a response method to relay a message to the client making the request//  400 range means that it's a user error and not a server error//
+    res.status(400).send('ERROR 400 :: The animal is not properly formatted.');
+  } else {
+    const animal = createNewAnimal(req.body, animals);
+    res.json(animal);
+  }
+});
+
+// This route will take the user to animals.html
+app.get('/animals', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/animals.html'));
+});
+
+// This route will take the user to indes.html
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/index.html'));
+});
+
+// This route will take the user to zookeepers.html
+
+app.get('/zookeepers', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/zookeepers.html'));
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
 app.listen(3001, () => {
