@@ -162,6 +162,15 @@
         "hungry"
       ],
       "id": "16"
+    },
+    {
+      "name": "JoJo",
+      "species": "donkey",
+      "diet": "herbivore",
+      "personalityTraits": [
+        "loving"
+      ],
+      "id": "17"
     }
   ]
 }
