@@ -1,3 +1,6 @@
+const fs = require("fs"); //11.4.3
+const path = require("path");
+
 function filterByQuery(query, animalsArray) {
   let personalityTraitsArray = [];
   // Note that we save the animalsArray as filteredResults here:
@@ -73,3 +76,10 @@ function validateAnimal(animal) {
   }
   return true;
 }
+
+module.exports = {
+  filterByQuery,
+  findById,
+  createNewAnimal,
+  validateAnimal
+};
